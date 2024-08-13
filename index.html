@@ -29,7 +29,9 @@
     
     <div id="result"></div>
 
-    <script>
+    <script type="module">
+        import { Client } from "@gradio/client";
+
         async function submitImage() {
             const fileInput = document.getElementById('fileInput');
             const resultDiv = document.getElementById('result');
@@ -40,28 +42,22 @@
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('file', file);
-
             try {
                 resultDiv.textContent = "Processing...";
-                
-                // Replace 'YOUR_API_URL' with your actual Hugging Face API endpoint
-                const response = await fetch('YOUR_API_URL', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Authorization': 'Bearer YOUR_HUGGING_FACE_API_KEY'  // Replace with your Hugging Face API key
-                    }
+
+                // Convert the uploaded file to a Blob
+                const exampleImage = await file.arrayBuffer();
+
+                // Replace 'comentsno/AIproject' with your actual Hugging Face project identifier
+                const client = await Client.connect("comentsno/AIproject");
+
+                // Send the image to the model and get the prediction
+                const result = await client.predict("/predict", { 
+                    img: new Blob([exampleImage], { type: file.type }), 
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                // Assuming the API returns a JSON object with the label
-                const label = data.label;  // Adjust this according to your API's response structure
+                // Assuming the API returns a result that has the prediction label
+                const label = result.data;  // Adjust this if your response structure is different
 
                 resultDiv.textContent = `Predicted Label: ${label}`;
             } catch (error) {
