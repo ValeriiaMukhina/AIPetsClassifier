@@ -30,6 +30,13 @@
   async function fetchResult(eventId) {
     try {
       const response = await fetch(`https://comentsno-aiproject.hf.space/call/predict/${eventId}`);
+      
+      // Check if the response is OK
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      // Attempt to parse the response as JSON
       const json = await response.json();
       console.log('Final response:', json); // Log the entire response for debugging
 
