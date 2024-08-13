@@ -57,4 +57,14 @@
     const reader = new FileReader();
     reader.onload = async function() {
       const imageUrl = reader.result;
-      const eventId = await fetchEv
+      const eventId = await fetchEventId(imageUrl);
+      if (eventId) {
+        await fetchResult(eventId);
+      }
+    };
+    
+    reader.readAsDataURL(photo.files[0]);
+  }
+
+  document.getElementById('photo').addEventListener('change', read);
+</script>
