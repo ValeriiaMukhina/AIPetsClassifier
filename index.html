@@ -11,16 +11,15 @@
       });
 
       const json = await response.json();
-      console.log('Initial response:', json); // Log the entire response for debugging
+      console.log('Initial response:', json);
 
-      // Extract the EVENT_ID from the response
       const eventId = json.event_id;
       if (eventId) {
         return eventId;
       } else {
         throw new Error('Unexpected response format or missing EVENT_ID');
       }
-      
+
     } catch (error) {
       results.innerHTML = `<p>Error: ${error.message}</p>`;
       console.error('Error during fetchEventId:', error);
@@ -29,49 +28,11 @@
 
   async function fetchResult(eventId) {
     try {
-      const response = await fetch(`https://comentsno-aiproject.hf.space/call/predict/${eventId}`);
-      
-      // Check if the response is OK
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      const response = await fetch(`https://comentsno-aiproject.hf.space/call/predict/${eventId}`, {
+        headers: {
+          'Accept': 'text/event-stream',
+        }
+      });
 
-      // Attempt to parse the response as JSON
-      const json = await response.json();
-      console.log('Final response:', json); // Log the entire response for debugging
-
-      // Process the final response
-      if (json['data'] && json['data'][0] && json['data'][0]['confidences'] && json['data'][0]['confidences'][0]) {
-        const label = json['data'][0]['confidences'][0]['label'];
-        results.innerHTML = `<br/><img src="${photo.files[0].name}" width="300"> <p>${label}</p>`;
-      } else {
-        results.innerHTML = `<p>Error: Unexpected response format.</p>`;
-        console.error('Unexpected response format:', json);
-      }
-      
-    } catch (error) {
-      results.innerHTML = `<p>Error: ${error.message}</p>`;
-      console.error('Error during fetchResult:', error);
-    }
-  }
-
-  function read() {
-    if (photo.files.length === 0) {
-      results.innerHTML = `<p>Error: No file selected.</p>`;
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = async function() {
-      const imageUrl = reader.result;
-      const eventId = await fetchEventId(imageUrl);
-      if (eventId) {
-        await fetchResult(eventId);
-      }
-    };
-    
-    reader.readAsDataURL(photo.files[0]);
-  }
-
-  document.getElementById('photo').addEventListener('change', read);
-</script>
+      // Read the response as text
+      const
