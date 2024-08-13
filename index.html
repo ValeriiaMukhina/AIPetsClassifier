@@ -83,7 +83,7 @@
                     }
 
                     const resultData = await resultResponse.json();
-                    const label = resultData?.data[0] || "No label returned"; // Adjust according to your API's response structure
+                    const label = resultData['data'][0]['confidences'][0]['label'] || "No label returned"; // Adjust according to your API's response structure
 
                     resultDiv.textContent = `Predicted Label: ${label}`;
                 };
