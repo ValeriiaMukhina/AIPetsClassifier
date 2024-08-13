@@ -43,26 +43,54 @@
             try {
                 resultDiv.textContent = "Processing...";
 
-                // Create a form data object to send the file
-                const formData = new FormData();
-                formData.append('file', file);
+                // Convert the image file to Base64
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
 
-                // Replace 'YOUR_HUGGING_FACE_API_URL' with your actual Hugging Face Gradio API URL
-                const response = await fetch('https://comentsno-aiproject.hf.space/call/predict/', {
-                    method: 'POST',
-                    body: formData
-                });
+                reader.onload = async function () {
+                    const base64Image = reader.result;
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                    // Step 1: Send POST request to initiate the prediction
+                    const response = await fetch('https://comentsno-aiproject.hf.space/call/predict', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            data: [
+                                { path: base64Image }
+                            ]
+                        })
+                    });
 
-                const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
 
-                // Assuming the API returns a JSON object with a 'label' field
-                const label = result.label || "No label returned"; // Adjust according to your API's response
+                    // Extract the event ID from the response
+                    const responseData = await response.json();
+                    const eventID = responseData?.event_id;
 
-                resultDiv.textContent = `Predicted Label: ${label}`;
+                    if (!eventID) {
+                        throw new Error("No event ID returned from API");
+                    }
+
+                    // Step 2: Poll the result using the event ID
+                    const resultResponse = await fetch(`https://comentsno-aiproject.hf.space/call/predict/${eventID}`);
+
+                    if (!resultResponse.ok) {
+                        throw new Error(`HTTP error! status: ${resultResponse.status}`);
+                    }
+
+                    const resultData = await resultResponse.json();
+                    const label = resultData?.data[0] || "No label returned"; // Adjust according to your API's response structure
+
+                    resultDiv.textContent = `Predicted Label: ${label}`;
+                };
+
+                reader.onerror = function (error) {
+                    resultDiv.textContent = `Error: ${error.message}`;
+                };
             } catch (error) {
                 resultDiv.textContent = `Error: ${error.message}`;
             }
